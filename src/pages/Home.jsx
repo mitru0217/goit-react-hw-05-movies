@@ -1,35 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { Link, useLocation } from 'react-router-dom';
 import { RotatingLines } from 'react-loader-spinner';
-import { MoviesList } from 'components/MoviesList';
-import { Loading } from './StyledPages/Home.styled';
-import {
-  HomeTitle,
-  ErrorMessage,
-} from 'components/styledComponents/Home.styled';
+import { GetTrendingMovies } from '../Api';
+import { Loading, HomeTitle, ErrorMessage } from './StyledPages/Home.styled';
 
-export const Home = () => {
+import { List } from 'components/styledComponents/MoviesList.syled';
+import { MoviesItem } from 'components/styledComponents/MoviesItem.syled';
+import { MovieCard } from 'components/Moviecard';
+
+const Home = () => {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const location = useLocation();
 
   useEffect(() => {
-    const controller = new AbortController();
-
     const loadMovies = async () => {
-      const API_KEY = '38f6f2c88436f6a6fb5d137cfc7b2688';
-      const BASE_URL = 'api.themoviedb.org/3/';
       try {
         setLoading(true);
         setMovies([]);
-        const movies = await axios.get(
-          `https://${BASE_URL}trending/movie/day?api_key=${API_KEY}`,
-          { controller: controller.signal }
-        );
+        const response = await GetTrendingMovies();
+        const trendingMovies = response.data.results;
 
-        console.log(movies.data.results);
-
-        setMovies([...movies.data.results]);
+        setMovies([...trendingMovies]);
 
         setError('');
       } catch (error) {
@@ -39,9 +32,7 @@ export const Home = () => {
       }
     };
     loadMovies();
-    return () => {
-      controller.abort();
-    };
+    return () => {};
   }, []);
 
   return (
@@ -52,10 +43,28 @@ export const Home = () => {
         </Loading>
       )}
       {movies.length > 0 && <HomeTitle>Trending Movies </HomeTitle>}
+      <List>
+        {movies &&
+          movies.map(movie => (
+            <MoviesItem key={movie.id}>
+              <Link to={`/movies/${movie.id}`} state={{ from: location }}>
+                <MovieCard
+                  key={movie.id}
+                  title={movie.original_title}
+                  poster={movie.poster_path}
+                  releaseDate={movie.release_date}
+                  genres={movie.genres}
+                />
+              </Link>
+            </MoviesItem>
+          ))}
+      </List>
+      ;
       {error && (
         <ErrorMessage>Error while loading data. Try again later.</ErrorMessage>
       )}
-      <MoviesList movies={movies} />
     </main>
   );
 };
+
+export default Home;

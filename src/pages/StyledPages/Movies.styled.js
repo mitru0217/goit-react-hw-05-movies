@@ -10,27 +10,11 @@ export const Container = styled.div`
 
 export const Span = styled.span`
   display: inline-block;
-  text-align: center;
+  margin: 0 auto;
   margin-top: 40px;
   font-size: 30px;
   font-weight: bold;
-`;
-
-export const LoadMoreBtn = styled.button`
-  margin: 0 auto;
-  text-align: center;
-  width: 100px;
-  height: 40px;
-  border: none;
-  border-radius: 5px;
-  background-color: blue;
-  color: white;
-  ${'' /* margin-bottom: 30px; */}
-  &:hover {
-    cursor: pointer;
-    background-color: #3399ff;
-    color: black;
-  }
+  color: red;
 `;
 
 export const Loading = styled.div`

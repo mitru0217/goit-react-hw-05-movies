@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { FaSearch } from 'react-icons/fa';
 import {
@@ -8,26 +8,18 @@ import {
   Form,
 } from 'components/styledComponents/SearchForm.styled';
 
-const SearchForm = ({ onSubmit }) => {
-  const [query, setQuery] = useState('');
-
-  const handleChange = e => {
-    setQuery(e.currentTarget.value.toLowerCase());
-  };
+const SearchForm = ({ value, onSubmit, onChange, name }) => {
   const handleSubmit = e => {
     e.preventDefault();
-    if (query.trim() === '') {
+    if (value === '') {
       toast.error('Nothing to show yet. Enter your requst.', {
         duration: 1000,
       });
       return;
     }
-    onSubmit(query);
-    reset();
+    onSubmit();
   };
-  const reset = () => {
-    setQuery('');
-  };
+
   return (
     <Header>
       <Form onSubmit={handleSubmit}>
@@ -37,9 +29,8 @@ const SearchForm = ({ onSubmit }) => {
         <Input
           type="text"
           autocomplete="off"
-          name="query"
-          value={query}
-          onChange={handleChange}
+          defaultValue={value}
+          name="name"
           autoFocus
           placeholder="Search movies"
         />
@@ -48,4 +39,5 @@ const SearchForm = ({ onSubmit }) => {
     </Header>
   );
 };
+
 export default SearchForm;

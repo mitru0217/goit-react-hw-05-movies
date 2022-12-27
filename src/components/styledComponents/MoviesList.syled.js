@@ -5,9 +5,6 @@ export const List = styled.ul`
   flex-wrap: wrap;
   justify-content: center;
   width: 100%;
-  ${
-    '' /* margin-top: -15px;
-  padding-top: 15px; */
-  }
+  height: auto;
   padding: 20px;
 `;

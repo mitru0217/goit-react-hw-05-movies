@@ -1,44 +1,70 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { RotatingLines } from 'react-loader-spinner';
-import SearchForm from 'components/SearchForm';
-import { MoviesList } from 'components/MoviesList';
-import { ErrorMessage } from 'components/styledComponents/Home.styled';
+import { ErrorMessage } from 'pages/StyledPages/Home.styled';
 import {
-  Container,
   Span,
   Loading,
   Warning,
   InValidQuery,
 } from 'pages/StyledPages/Movies.styled';
+import { List } from 'components/styledComponents/MoviesList.syled';
+import { MoviesItem } from 'components/styledComponents/MoviesItem.syled';
+import { MovieCard } from 'components/Moviecard';
+import { GetMoviesByQuery } from '../Api';
 
-export const Movies = () => {
-  const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
+import toast, { Toaster } from 'react-hot-toast';
+import { FaSearch } from 'react-icons/fa';
+import {
+  Header,
+  Input,
+  Button,
+  Form,
+} from 'components/styledComponents/SearchForm.styled';
+
+const Movies = () => {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get('query');
+
+  const onSubmit = async e => {
+    e.preventDefault();
+    if (query === '') {
+      toast.error('Nothing to show yet. Enter your requst.', {
+        duration: 1000,
+      });
+    }
+    const form = e.currentTarget;
+    setSearchParams(form !== '' ? { query: form.elements.query.value } : {});
+    form.reset();
+    try {
+      setLoading(true);
+      setMovies([]);
+      const response = await GetMoviesByQuery(query);
+      const MoviesByQuery = response.data.results;
+      setMovies([...MoviesByQuery]);
+      setError('');
+    } catch (error) {
+      setError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const controller = new AbortController();
     if (query === '') {
       return;
     }
     const loadMovies = async () => {
-      const API_KEY = '38f6f2c88436f6a6fb5d137cfc7b2688';
-      const BASE_URL = 'api.themoviedb.org/3/';
       try {
         setLoading(true);
         setMovies([]);
-        const movies = await axios.get(
-          `https://${BASE_URL}search/movie?api_key=${API_KEY}&language=en-US&page=${page}&include_adult=false&query=${query}`,
-          { controller: controller.signal }
-        );
-
-        console.log(movies.data.results);
-
-        setMovies([...movies.data.results]);
-
+        const response = await GetMoviesByQuery(query);
+        const MoviesByQuery = response.data.results;
+        setMovies([...MoviesByQuery]);
         setError('');
       } catch (error) {
         setError(error);
@@ -47,45 +73,62 @@ export const Movies = () => {
       }
     };
     loadMovies();
-    return () => {
-      controller.abort();
-    };
-  }, [query, page]);
+    return () => {};
+  }, [query]);
 
-  const addMovies = query => {
-    setQuery(query);
-    setPage(1);
-
-    setMovies([]);
-    setQuery(query);
-  };
   return (
     <main>
-      <SearchForm onSubmit={addMovies} />
-      <Container>
-        {movies.length === 0 && query && (
-          <Warning>
-            There are no images for query:
-            <InValidQuery> {query}</InValidQuery>
-          </Warning>
-        )}
+      <Header>
+        <Form onSubmit={e => onSubmit(e)}>
+          <Button type="submit">
+            <FaSearch size={25} />
+          </Button>
+          <Input
+            type="text"
+            autocomplete="off"
+            name="query"
+            autoFocus
+            placeholder="Search movies"
+          />
+        </Form>
+        <Toaster />
+      </Header>
+      {movies.length === 0 && query && (
+        <Warning>
+          There are no images for query:
+          <InValidQuery> {query}</InValidQuery>
+        </Warning>
+      )}
 
-        {loading && (
-          <Loading>
-            <RotatingLines strokeColor="blue" />
-          </Loading>
-        )}
-        {error && movies.length !== 0 && (
-          <ErrorMessage>
-            Error while loading data. Try again later.
-          </ErrorMessage>
-        )}
-        {!query ? (
-          <Span>'While there is nothing to show'</Span>
-        ) : (
-          <MoviesList movies={movies} />
-        )}
-      </Container>
+      {loading && (
+        <Loading>
+          <RotatingLines strokeColor="blue" />
+        </Loading>
+      )}
+      {error && movies.length !== 0 && (
+        <ErrorMessage>Error while loading data. Try again later.</ErrorMessage>
+      )}
+      {!query ? (
+        <Span>'While there is nothing to show'</Span>
+      ) : (
+        <List>
+          {movies &&
+            movies.map(movie => (
+              <MoviesItem key={movie.id}>
+                <Link to={`/movies/${movie.id}`} state={{ from: location }}>
+                  <MovieCard
+                    key={movie.id}
+                    title={movie.original_title}
+                    poster={movie.poster_path}
+                    releaseDate={movie.release_date}
+                  />
+                </Link>
+              </MoviesItem>
+            ))}
+        </List>
+      )}
     </main>
   );
 };
+
+export default Movies;
